@@ -25,19 +25,29 @@ declare(strict_types=1);
 
 namespace BaksDev\Orders\Telegram\Messenger;
 
+use BaksDev\Auth\Telegram\Repository\AccountTelegramRole\AccountTelegramRoleInterface;
 use BaksDev\Orders\Order\Entity\Event\OrderEvent;
 use BaksDev\Orders\Order\Entity\Products\OrderProduct;
 use BaksDev\Orders\Order\Messenger\OrderMessage;
+use BaksDev\Orders\Order\Repository\OrderDetail\OrderDetailInterface;
+use BaksDev\Orders\Order\Type\Id\OrderUid;
 use BaksDev\Orders\Order\Type\Status\OrderStatus\OrderStatusCanceled;
 use BaksDev\Orders\Order\Type\Status\OrderStatus\OrderStatusCompleted;
 use BaksDev\Orders\Order\Type\Status\OrderStatus\OrderStatusNew;
+use BaksDev\Orders\Order\UseCase\Admin\Edit\EditOrderDTO;
+use BaksDev\Orders\Order\UseCase\User\Basket\OrderDTO;
 use BaksDev\Products\Product\Entity\Offers\Variation\Modification\Quantity\ProductModificationQuantity;
 use BaksDev\Products\Product\Entity\Offers\Variation\Quantity\ProductVariationQuantity;
 use BaksDev\Products\Product\Repository\CurrentQuantity\CurrentQuantityByEventInterface;
 use BaksDev\Products\Product\Repository\CurrentQuantity\Modification\CurrentQuantityByModificationInterface;
 use BaksDev\Products\Product\Repository\CurrentQuantity\Offer\CurrentQuantityByOfferInterface;
 use BaksDev\Products\Product\Repository\CurrentQuantity\Variation\CurrentQuantityByVariationInterface;
+use BaksDev\Products\Stocks\Telegram\Messenger\Extradition\TelegramExtraditionProcess;
+use BaksDev\Telegram\Api\TelegramSendMessage;
+use BaksDev\Users\Profile\Group\Repository\ProfilesByRole\ProfilesByRoleInterface;
+use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -45,25 +55,27 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 final class OrderNews
 {
     private EntityManagerInterface $entityManager;
-
-    private CurrentQuantityByModificationInterface $quantityByModification;
-
-    private CurrentQuantityByVariationInterface $quantityByVariation;
-
-    private CurrentQuantityByOfferInterface $quantityByOffer;
-
-    private CurrentQuantityByEventInterface $quantityByEvent;
     private LoggerInterface $logger;
+    private TelegramSendMessage $telegramSendMessage;
+    private AccountTelegramRoleInterface $accountTelegramRole;
+    private OrderDetailInterface $orderDetail;
 
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        LoggerInterface $ordersOrderLogger
+        LoggerInterface $ordersOrderLogger,
+        TelegramSendMessage $telegramSendMessage,
+        AccountTelegramRoleInterface $accountTelegramRole,
+        OrderDetailInterface $orderDetail
     )
     {
         $this->entityManager = $entityManager;
         $this->entityManager->clear();
+
         $this->logger = $ordersOrderLogger;
+        $this->telegramSendMessage = $telegramSendMessage;
+        $this->accountTelegramRole = $accountTelegramRole;
+        $this->orderDetail = $orderDetail;
     }
 
 
@@ -72,6 +84,9 @@ final class OrderNews
      */
     public function __invoke(OrderMessage $message): void
     {
+
+        $this->logger->notice('Отправляем уведомление');
+
         /**
          * Новое событие заказа
          *
@@ -79,20 +94,107 @@ final class OrderNews
          */
         $OrderEvent = $this->entityManager->getRepository(OrderEvent::class)->find($message->getEvent());
 
+
         if(!$OrderEvent)
         {
             return;
         }
 
+        $OrderDTO = new EditOrderDTO();
+        $OrderEvent->getDto($OrderDTO);
+
         /** Если статус не New «Новый»  */
-        if(false === $OrderEvent->getStatus()->equals(OrderStatusNew::class)
-        )
+        if(false === $OrderDTO->getStatus()->equals(OrderStatusNew::class))
         {
             return;
         }
 
-        $this->logger->info('Отправили сообщение о новом заказе');
+        if(!$OrderDTO->getProfile())
+        {
+            return;
+        }
+
+        $this->handle($message->getId(), $OrderDTO->getProfile());
+
     }
 
+    public function handle(OrderUid $order, UserProfileUid $profile): void
+    {
+        /** Получаем всех Telegram пользователей, имеющих доступ к профилю заявки */
+        $accounts = $this->accountTelegramRole->fetchAll($profile, 'ROLE_ORDERS_STATUS_NEW');
+
+        if(empty($accounts))
+        {
+            $this->logger->notice('Нет зарегистрированных профилей Telegram для отправки уведомления');
+            return;
+        }
+
+        $detailOrder = $this->orderDetail->fetchDetailOrderAssociative($order);
+
+        //$OrderDTO->getUsr()->getUsr()
+
+        $menu[] = [
+            'text' => '❌', // Удалить сообщение
+            'callback_data' => 'telegram-delete-message'
+        ];
+
+        //$detailOrder['delivery_geocode_latitude']
+        //$detailOrder['delivery_geocode_longitude']
+
+//        $menu[] = [
+        //            'text' => 'На карте',
+        //            'callback_data' => 'telegram-delete-message' // telegram-location|latitude|longitude
+        //        ];
+
+        //        $menu[] = [
+        //            'text' => '📦 Начать упаковку',
+        //            'callback_data' => TelegramExtraditionProcess::KEY.'|'.$profile
+        //        ];
+
+        $markup = json_encode([
+            'inline_keyboard' => array_chunk($menu, 2),
+        ], JSON_THROW_ON_ERROR);
+
+        $msg = '📦 <b>Поступил новый заказ</b>'.PHP_EOL;
+        $msg .= sprintf('Номер: <b>%s</b>', $detailOrder['order_number']).PHP_EOL;
+        $msg .= PHP_EOL;
+
+        $msg .= '<b>Клиент</b>'.PHP_EOL;
+        $msg .= PHP_EOL;
+
+        try
+        {
+            $users = json_decode($detailOrder['order_user'], true, 512, JSON_THROW_ON_ERROR);
+
+            foreach($users as $user)
+            {
+                $msg .= $user['profile_name'].': <b>'.$user['profile_value'].'</b>'.PHP_EOL;
+            }
+        }
+        catch(Exception)
+        {
+
+        }
+
+        if($detailOrder['delivery_geocode_address'])
+        {
+            $msg .= PHP_EOL;
+            $msg .= '<b>Адрес доставки</b>'.PHP_EOL;
+            $msg .= $detailOrder['delivery_geocode_address'];
+        }
+
+        foreach($accounts as $account)
+        {
+            $this
+                ->telegramSendMessage
+                ->chanel($account['chat'])
+                ->message($msg)
+                ->markup($markup)
+                ->send();
+        }
+
+        $this->logger->info('Отправили сообщение о новом заказе');
+
+    }
 
 }
