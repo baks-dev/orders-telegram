@@ -84,7 +84,6 @@ final class OrderNews
      */
     public function __invoke(OrderMessage $message): void
     {
-
         $this->logger->notice('Отправляем уведомление');
 
         /**
@@ -114,14 +113,21 @@ final class OrderNews
             return;
         }
 
-        $this->handle($message->getId(), $OrderDTO->getProfile());
+        $this->handle($message->getId());
 
     }
 
-    public function handle(OrderUid $order, UserProfileUid $profile): void
+    public function handle(OrderUid $order): void
     {
+
+        /** Получаем всех пользователей */
+
+
+        return;
+
+
         /** Получаем всех Telegram пользователей, имеющих доступ к профилю заявки */
-        $accounts = $this->accountTelegramRole->fetchAll($profile, 'ROLE_ORDERS_STATUS_NEW');
+        $accounts = $this->accountTelegramRole->fetchAll($profile, 'ROLE_ORDERS');
 
         if(empty($accounts))
         {
