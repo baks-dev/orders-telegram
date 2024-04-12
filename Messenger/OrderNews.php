@@ -60,22 +60,21 @@ final class OrderNews
     private AccountTelegramRoleInterface $accountTelegramRole;
     private OrderDetailInterface $orderDetail;
 
-
     public function __construct(
         EntityManagerInterface $entityManager,
         LoggerInterface $ordersOrderLogger,
         TelegramSendMessage $telegramSendMessage,
         AccountTelegramRoleInterface $accountTelegramRole,
-        OrderDetailInterface $orderDetail
+        OrderDetailInterface $orderDetail,
     )
     {
         $this->entityManager = $entityManager;
         $this->entityManager->clear();
-
         $this->logger = $ordersOrderLogger;
         $this->telegramSendMessage = $telegramSendMessage;
         $this->accountTelegramRole = $accountTelegramRole;
         $this->orderDetail = $orderDetail;
+
     }
 
 
@@ -108,11 +107,6 @@ final class OrderNews
             return;
         }
 
-        if(!$OrderDTO->getProfile())
-        {
-            return;
-        }
-
         $this->handle($message->getId());
 
     }
@@ -120,14 +114,10 @@ final class OrderNews
     public function handle(OrderUid $order): void
     {
 
-        /** Получаем всех пользователей */
-
-
         return;
 
-
-        /** Получаем всех Telegram пользователей, имеющих доступ к профилю заявки */
-        $accounts = $this->accountTelegramRole->fetchAll($profile, 'ROLE_ORDERS');
+        /** Получаем всех Telegram пользователей, имеющих доступ к роли */
+        $accounts = $this->accountTelegramRole->fetchAll('ROLE_ORDERS');
 
         if(empty($accounts))
         {
@@ -137,25 +127,11 @@ final class OrderNews
 
         $detailOrder = $this->orderDetail->fetchDetailOrderAssociative($order);
 
-        //$OrderDTO->getUsr()->getUsr()
 
         $menu[] = [
             'text' => '❌', // Удалить сообщение
             'callback_data' => 'telegram-delete-message'
         ];
-
-        //$detailOrder['delivery_geocode_latitude']
-        //$detailOrder['delivery_geocode_longitude']
-
-//        $menu[] = [
-        //            'text' => 'На карте',
-        //            'callback_data' => 'telegram-delete-message' // telegram-location|latitude|longitude
-        //        ];
-
-        //        $menu[] = [
-        //            'text' => '📦 Начать упаковку',
-        //            'callback_data' => TelegramExtraditionProcess::KEY.'|'.$profile
-        //        ];
 
         $markup = json_encode([
             'inline_keyboard' => array_chunk($menu, 2),
@@ -202,5 +178,4 @@ final class OrderNews
         $this->logger->info('Отправили сообщение о новом заказе');
 
     }
-
 }
