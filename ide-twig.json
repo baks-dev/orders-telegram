@@ -1,7 +1,7 @@
 {
   "namespaces": [
     {
-      "namespace": "orders-order-telegram",
+      "namespace": "orders-telegram",
       "path": "Resources/view"
     }
   ]
