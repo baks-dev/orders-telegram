@@ -1,7 +1,8 @@
 # BaksDev BaksDev Orders Telegram
 
-[![Version](https://img.shields.io/badge/version-7.0.0-blue)](https://github.com/baks-dev/orders-telegram/releases)
+[![Version](https://img.shields.io/badge/version-7.2.0-blue)](https://github.com/baks-dev/orders-telegram/releases)
 ![php 8.2+](https://img.shields.io/badge/php-min%208.1-red.svg)
+[![packagist](https://img.shields.io/badge/packagist-green)](https://packagist.org/packages/baks-dev/orders-telegram)
 
 Модуль управления складским учетом продукции с помощью Telegram
 
