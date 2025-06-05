@@ -1,0 +1,16 @@
+{# @var orderInfo \BaksDev\Orders\Order\Repository\OrderDetail\OrderDetailResult #}
+<i>Информация о заказе:</i>
+Номер: <b>#{{ orderInfo.orderNumber }}</b>
+Дата: <b>{{ orderInfo.orderData }}</b>
+
+<b>Товары в заказе:</b>
+{% for card in orderInfo.orderProducts %}
+    - <b>{{ card.product_name ~' '~
+    card.product_variation_value|call_twig_func(card.product_variation_reference~'_render') ~' '~
+    card.product_modification_value|call_twig_func(card.product_modification_reference~'_render') ~' '~
+    card.product_offer_value|call_twig_func(card.product_offer_reference~'_render') }}</b>
+    {{ 'Количество: '~ card.product_total }}
+    {{ 'Цена: '~ money(card.product_price, card.product_price_currency) }}
+    {{ 'Сумма: '~ money((card.product_price * card.product_total), card.product_price_currency) }}
+
+{% endfor %}

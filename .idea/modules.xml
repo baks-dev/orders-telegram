@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/BaksDev Orders Telegram.iml" filepath="$PROJECT_DIR$/.idea/BaksDev Orders Telegram.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/orders-telegram-dev.iml" filepath="$PROJECT_DIR$/.idea/orders-telegram-dev.iml" />
     </modules>
   </component>
 </project>
