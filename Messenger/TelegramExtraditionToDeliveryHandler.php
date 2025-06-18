@@ -88,7 +88,7 @@ final readonly class TelegramExtraditionToDeliveryHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.' Запрос от не авторизированного пользователя', [
+            $this->logger->warning(self::class.':'.__LINE__.' Запрос от не авторизированного пользователя', [
                 '$profile' => $profile,
             ]);
             return;
@@ -104,7 +104,7 @@ final readonly class TelegramExtraditionToDeliveryHandler
 
         if(is_null($productStockEvents))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.' Не найдена заявка для заказа по статусу', [
+            $this->logger->warning(self::class.':'.__LINE__.' Не найдена заявка для заказа по статусу', [
                 '$order' => var_export($order, true),
                 'onStatus' => ProductStockStatusExtradition::class,
             ]);
@@ -127,7 +127,7 @@ final readonly class TelegramExtraditionToDeliveryHandler
 
         if(false === $handle instanceof ProductStock)
         {
-            $this->logger->critical(__CLASS__.':'.__LINE__.'Ошибка при изменении статуса заказа', [
+            $this->logger->critical(self::class.':'.__LINE__.'Ошибка при изменении статуса заказа', [
                 '$order' => var_export($order, true),
                 '$handle' => var_export($handle, true),
             ]);

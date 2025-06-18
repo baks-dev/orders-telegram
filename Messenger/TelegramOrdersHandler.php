@@ -91,7 +91,7 @@ final class TelegramOrdersHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.' Запрос от не авторизированного пользователя', [
+            $this->logger->warning(self::class.':'.__LINE__.' Запрос от не авторизированного пользователя', [
                 '$profile' => var_export($profile, true),
             ]);
             return;
@@ -109,7 +109,7 @@ final class TelegramOrdersHandler
 
         if(false === ($orderEvent instanceof OrderEvent))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.' Событие заказа по идентификатору не найден ', [
+            $this->logger->warning(self::class.':'.__LINE__.' Событие заказа по идентификатору не найден ', [
                 '$orderId' => var_export($this->order, true)
             ]);
             return;
@@ -122,7 +122,7 @@ final class TelegramOrdersHandler
 
         if(false === ($orderInfo instanceof OrderDetailResult))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.' Заказ по идентификатору не найден ', [
+            $this->logger->warning(self::class.':'.__LINE__.' Заказ по идентификатору не найден ', [
                 '$orderId' => var_export($this->order, true)
             ]);
             return;
@@ -136,20 +136,7 @@ final class TelegramOrdersHandler
         /** Шаблон сообщения */
         $template = $this->templateExtension->extends('@orders-telegram:bot/order.html.twig');
 
-        try
-        {
-            $render = $this->environment->render($template, [
-                'orderInfo' => $orderInfo,
-            ]);
-        }
-        catch(\Exception $exception)
-        {
-            $this->logger->critical(__CLASS__.':'.__LINE__.'Ошибка рендера шаблона @orders-telegram:bot/order.html.twig', [
-                '$exception' => $exception->getMessage(),
-                'chatId' => $telegramRequest->getChatId(),
-            ]);
-            return;
-        }
+        $render = $this->environment->render($template, ['orderInfo' => $orderInfo]);
 
         /** Профиль, которому принадлежит заказ */
         $orderAuthority = $orderEvent->getOrderProfile();
