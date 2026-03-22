@@ -52,6 +52,7 @@ use Twig\Environment;
  *  Информация о заказе с действиями (кнопками) по ролям
  *
  * next:
+ *
  * @see TelegramExtraditionToDeliveryHandler
  * @see TelegramPackageToExtraditionStatusHandler
  */
@@ -110,7 +111,7 @@ final class TelegramOrdersHandler
         if(false === ($orderEvent instanceof OrderEvent))
         {
             $this->logger->warning(self::class.':'.__LINE__.' Событие заказа по идентификатору не найден ', [
-                '$orderId' => var_export($this->order, true)
+                '$orderId' => var_export($this->order, true),
             ]);
             return;
         }
@@ -123,7 +124,7 @@ final class TelegramOrdersHandler
         if(false === ($orderInfo instanceof OrderDetailResult))
         {
             $this->logger->warning(self::class.':'.__LINE__.' Заказ по идентификатору не найден ', [
-                '$orderId' => var_export($this->order, true)
+                '$orderId' => var_export($this->order, true),
             ]);
             return;
         }
@@ -148,7 +149,7 @@ final class TelegramOrdersHandler
             $this->keyboardMarkup->addNewRow(
                 (new ReplyKeyboardButton)
                     ->setText('Выход')
-                    ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                    ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
             );
 
             $this
@@ -184,7 +185,7 @@ final class TelegramOrdersHandler
         $this->keyboardMarkup->addNewRow(
             (new ReplyKeyboardButton)
                 ->setText('Выход')
-                ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
         );
 
         $this

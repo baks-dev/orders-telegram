@@ -31,7 +31,7 @@ return static function(TwigConfig $twig) {
 
     $twig->path(
         BaksDevOrdersTelegramBundle::PATH.implode(DIRECTORY_SEPARATOR, ['Resources', 'view', '']),
-        'orders-telegram'
+        'orders-telegram',
     );
 
 };

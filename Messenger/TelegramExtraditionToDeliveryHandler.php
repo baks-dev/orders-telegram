@@ -136,7 +136,7 @@ final readonly class TelegramExtraditionToDeliveryHandler
             $this->keyboardMarkup->addNewRow(
                 (new ReplyKeyboardButton)
                     ->setText('Выход')
-                    ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                    ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
             );
 
             $this
@@ -154,7 +154,7 @@ final readonly class TelegramExtraditionToDeliveryHandler
         $this->keyboardMarkup->addNewRow(
             (new ReplyKeyboardButton)
                 ->setText('Выход')
-                ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
         );
 
         $text = sprintf('Заказ <b>#%s</b> принят для доставки', $productStockEvent->getNumber());
